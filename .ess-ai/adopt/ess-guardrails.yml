@@ -1,0 +1,31 @@
+# ESS guardrails for an EXISTING project. Copy to .github/workflows/ess-guardrails.yml.
+# Keeps your own CI as it is and adds: secret scan on every push, and the ESS guardrail check
+# (protected files, dependencies, secrets, architecture, Definition of Tested, tests) on every PR.
+# The test command comes from test_command in .ess-ai/guardrails.json (empty = auto-detect).
+name: ESS guardrails
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scan (gitleaks)
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --verbose
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: ESS guardrail check
+        if: github.event_name == 'pull_request'
+        run: python tools/ess_guard.py check --base origin/${{ github.base_ref }}

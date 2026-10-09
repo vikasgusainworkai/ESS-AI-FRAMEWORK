@@ -1,0 +1,8 @@
+{
+  "_about": "ESS automation for Claude Code: auto-test after every AI edit and the approved commit-and-push step (tools/ess_ship.py). Only the tech lead changes this file, in a reviewed PR.",
+  "autotest_command": "python -m pytest -q --no-cov",
+  "remote": "origin",
+  "branch_types": ["fix", "feat", "chore", "refactor", "test", "docs"],
+  "open_pr": "auto",
+  "after_ship": []
+}

@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Management</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #fff; --text: #1d2330; --muted: #5d6675; --line: #dde1e7;
+    --accent: #2457d6; --danger: #c22f2f; --ok-bg: #e6f4ea; --ok: #1e6b34; --err-bg: #fdecec;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  h2 { margin: 0 0 12px; font-size: 17px; }
+  .sub { margin: 0 0 20px; color: var(--muted); }
+  .layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filters input { flex: 1 1 200px; }
+  input, select, button { font: inherit; }
+  input, select { padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; width: 100%; }
+  .filters select { width: auto; }
+  button { padding: 7px 12px; border-radius: 6px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.danger { color: var(--danger); }
+  button:disabled { opacity: .5; cursor: default; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-size: 13px; color: var(--muted); font-weight: 600; }
+  td.actions { display: flex; gap: 6px; }
+  td.actions button { padding: 3px 8px; font-size: 13px; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+  .badge.active { background: var(--ok-bg); color: var(--ok); }
+  .badge.inactive { background: #eceef1; color: var(--muted); }
+  .empty { color: var(--muted); text-align: center; padding: 20px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
+  .field-error { color: var(--danger); font-size: 13px; min-height: 0; margin-top: 3px; }
+  input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--danger); }
+  .form-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .message { padding: 9px 12px; border-radius: 6px; margin-bottom: 16px; }
+  .message.ok { background: var(--ok-bg); color: var(--ok); }
+  .message.error { background: var(--err-bg); color: var(--danger); }
+</style>
+</head>
+<body>
+<main>
+  <h1>User Management</h1>
+  <p class="sub">Local demo. Data is kept in memory and is lost when the server restarts.</p>
+  <div id="message" class="message" role="status" hidden></div>
+
+  <div class="layout">
+    <section class="panel" aria-label="Users">
+      <div class="filters">
+        <input id="search" type="search" placeholder="Search name or email" aria-label="Search name or email" maxlength="100">
+        <select id="filter-role" aria-label="Filter by role">
+          <option value="">All roles</option>
+          <option value="admin">Admin</option>
+          <option value="manager">Manager</option>
+          <option value="user">User</option>
+        </select>
+        <select id="filter-status" aria-label="Filter by status">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="form-title">
+      <h2 id="form-title">Add user</h2>
+      <form id="user-form" novalidate>
+        <label for="name">Name</label>
+        <input id="name" name="name" maxlength="100" required>
+        <div class="field-error" id="name-error"></div>
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" maxlength="254" required>
+        <div class="field-error" id="email-error"></div>
+
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <option value="user">User</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+        <div class="field-error" id="role-error"></div>
+
+        <label for="status">Status</label>
+        <select id="status" name="status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <div class="field-error" id="status-error"></div>
+
+        <div class="form-actions">
+          <button type="submit" class="primary" id="submit">Add user</button>
+          <button type="button" id="cancel" hidden>Cancel</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script>
+  const API = "/api/users";
+  const FIELDS = ["name", "email", "role", "status"];
+  const $ = (id) => document.getElementById(id);
+  const form = $("user-form");
+  let editingId = null;
+  let searchTimer;
+
+  function showMessage(text, kind) {
+    const box = $("message");
+    box.textContent = text;
+    box.className = "message " + kind;
+    box.hidden = false;
+  }
+
+  function clearErrors() {
+    FIELDS.forEach((f) => { $(f + "-error").textContent = ""; $(f).removeAttribute("aria-invalid"); });
+  }
+
+  // Turns an API error response into a readable message; field errors go next to the inputs.
+  async function apiError(response) {
+    let body = {};
+    try { body = await response.json(); } catch { /* non-JSON body */ }
+    if (response.status === 422 && Array.isArray(body.details)) {
+      const general = [];
+      body.details.forEach((d) => {
+        if (FIELDS.includes(d.field)) {
+          $(d.field + "-error").textContent = d.message;
+          $(d.field).setAttribute("aria-invalid", "true");
+        } else {
+          general.push((d.field ? d.field + ": " : "") + d.message);
+        }
+      });
+      return general.length ? general.join("; ") : "Please correct the highlighted fields.";
+    }
+    if (body.error === "email_already_exists") {
+      $("email-error").textContent = body.message;
+      $("email").setAttribute("aria-invalid", "true");
+    }
+    return body.message || "Request failed (HTTP " + response.status + ").";
+  }
+
+  async function request(method, url, data) {
+    const options = { method, headers: {} };
+    if (data !== undefined) {
+      options.headers["Content-Type"] = "application/json";
+      options.body = JSON.stringify(data);
+    }
+    let response;
+    try {
+      response = await fetch(url, options);
+    } catch {
+      throw new Error("Cannot reach the server. Is it running?");
+    }
+    if (!response.ok) throw new Error(await apiError(response));
+    return response.status === 204 ? null : response.json();
+  }
+
+  function cell(text) {
+    const td = document.createElement("td");
+    td.textContent = text;
+    return td;
+  }
+
+  function button(label, onClick, cls) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    if (cls) b.className = cls;
+    b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function render(users) {
+    const body = $("users-body");
+    body.replaceChildren();
+    if (!users.length) {
+      const td = cell("No users found.");
+      td.colSpan = 5;
+      td.className = "empty";
+      body.append(document.createElement("tr"));
+      body.lastChild.append(td);
+      return;
+    }
+    users.forEach((u) => {
+      const tr = document.createElement("tr");
+      const status = cell("");
+      const badge = document.createElement("span");
+      badge.className = "badge " + u.status;
+      badge.textContent = u.status;
+      status.append(badge);
+      const actions = document.createElement("td");
+      actions.className = "actions";
+      const deactivate = button("Deactivate", () => deactivateUser(u));
+      deactivate.disabled = u.status === "inactive";
+      actions.append(button("Edit", () => startEdit(u)), deactivate,
+                     button("Delete", () => deleteUser(u), "danger"));
+      tr.append(cell(u.name), cell(u.email), cell(u.role), status, actions);
+      body.append(tr);
+    });
+  }
+
+  async function loadUsers() {
+    const params = new URLSearchParams();
+    const q = $("search").value.trim();
+    if (q) params.set("q", q);
+    if ($("filter-role").value) params.set("role", $("filter-role").value);
+    if ($("filter-status").value) params.set("status", $("filter-status").value);
+    try {
+      render(await request("GET", API + (params.size ? "?" + params : "")));
+    } catch (e) {
+      showMessage(e.message, "error");
+    }
+  }
+
+  function resetForm() {
+    editingId = null;
+    form.reset();
+    clearErrors();
+    $("form-title").textContent = "Add user";
+    $("submit").textContent = "Add user";
+    $("cancel").hidden = true;
+  }
+
+  function startEdit(user) {
+    resetForm();
+    editingId = user.id;
+    FIELDS.forEach((f) => { $(f).value = user[f]; });
+    $("form-title").textContent = "Edit user";
+    $("submit").textContent = "Save changes";
+    $("cancel").hidden = false;
+    $("name").focus();
+  }
+
+  async function deactivateUser(user) {
+    try {
+      await request("POST", API + "/" + encodeURIComponent(user.id) + "/deactivate");
+      showMessage(user.name + " was deactivated.", "ok");
+      if (editingId === user.id) resetForm();
+      loadUsers();
+    } catch (e) {
+      showMessage(e.message, "error");
+    }
+  }
+
+  async function deleteUser(user) {
+    if (!confirm("Delete " + user.name + " (" + user.email + ")? This cannot be undone.")) return;
+    try {
+      await request("DELETE", API + "/" + encodeURIComponent(user.id));
+      showMessage(user.name + " was deleted.", "ok");
+      if (editingId === user.id) resetForm();
+      loadUsers();
+    } catch (e) {
+      showMessage(e.message, "error");
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearErrors();
+    const data = Object.fromEntries(FIELDS.map((f) => [f, $(f).value]));
+    $("submit").disabled = true;
+    try {
+      if (editingId) {
+        await request("PATCH", API + "/" + encodeURIComponent(editingId), data);
+        showMessage("Changes saved.", "ok");
+      } else {
+        await request("POST", API, data);
+        showMessage("User added.", "ok");
+      }
+      resetForm();
+      loadUsers();
+    } catch (e) {
+      showMessage(e.message, "error");
+    } finally {
+      $("submit").disabled = false;
+    }
+  });
+
+  $("cancel").addEventListener("click", resetForm);
+  $("search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadUsers, 250); });
+  $("filter-role").addEventListener("change", loadUsers);
+  $("filter-status").addEventListener("change", loadUsers);
+  loadUsers();
+</script>
+</body>
+</html>

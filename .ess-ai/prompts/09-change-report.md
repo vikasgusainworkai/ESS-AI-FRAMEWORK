@@ -1,0 +1,2 @@
+# ESS AI Change Report
+Save the report in `.ess-ai/reports/`. Report requirement, plan approval, AI tool/model, context used, files changed, impact, dependencies, tests and exact results, security checks, manual validation, UNKNOWNs, reviewer and final decision. Never invent evidence.

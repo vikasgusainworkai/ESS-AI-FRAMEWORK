@@ -1,0 +1,2 @@
+# Approved Tools and Data Rule
+Use only ESS-approved, company-managed AI tools and accounts for production or customer work (`.ess-ai/context/approved-tools.md`). Do not paste secrets, credentials, production data or restricted customer data into any AI tool unless that tool is approved for that data classification. Pick the tool/model by task complexity, codebase size and data sensitivity (`prompts/dev/23-right-ai-tool-or-model-for-the-job.md`).

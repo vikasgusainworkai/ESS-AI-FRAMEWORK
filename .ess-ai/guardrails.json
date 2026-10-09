@@ -1,0 +1,70 @@
+{
+  "_about": "ESS guardrails configuration. Read by tools/ess_guard (Claude Code hooks and the branch check). Only the tech lead changes this file, in a reviewed PR. Paths are relative to the project root with '/' separators.",
+  "base_branch": "main",
+  "protected_paths": [
+    ".ess-ai/rules/",
+    ".ess-ai/guardrails.json",
+    ".claude/settings.json",
+    "tools/ess_guard.py",
+    ".github/workflows/",
+    ".pre-commit-config.yaml",
+    ".gitleaks.toml",
+    "tools/ess_ship.py",
+    "tools/ess_autotest.py",
+    ".ess-ai/automation.json",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ],
+  "dependency_files": [
+    "pyproject.toml",
+    "requirements.txt",
+    "requirements-dev.txt",
+    "Pipfile",
+    "Pipfile.lock",
+    "poetry.lock",
+    "uv.lock",
+    "package.json",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml"
+  ],
+  "code_dirs": [
+    "src/",
+    "app/",
+    "lib/"
+  ],
+  "test_dirs": [
+    "tests/",
+    "test/"
+  ],
+  "blocked_imports": [
+    "sqlite3",
+    "sqlalchemy",
+    "psycopg",
+    "psycopg2",
+    "pymysql",
+    "mysql",
+    "pymongo",
+    "cx_oracle",
+    "oracledb",
+    "pyodbc",
+    "redis",
+    "peewee",
+    "tortoise",
+    "motor",
+    "pg",
+    "mysql2",
+    "mongodb",
+    "mongoose",
+    "better-sqlite3",
+    "knex",
+    "sequelize",
+    "typeorm",
+    "@prisma/client",
+    "ioredis",
+    "mssql",
+    "tedious"
+  ],
+  "allow_sql_in_code": false,
+  "test_command": ""
+}

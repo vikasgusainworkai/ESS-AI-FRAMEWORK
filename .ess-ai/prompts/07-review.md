@@ -1,0 +1,2 @@
+# ESS Senior Review
+Review correctness, architecture, scope, dependencies, DB/API impact, auth, tenant isolation, security, performance, errors, maintainability, tests and regression. Give concrete findings; do not approve by default.

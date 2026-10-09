@@ -1,0 +1,2 @@
+# Multi-Tenancy Rule
+Tenant context is an architecture concern, not a column. It must stay attached from login through authorization, APIs, tools, database, documents/files, vector records, caches, search results, agent/MCP access and logs/evaluation data. Never create an AI path that can reach an unscoped database, vector store or customer environment. Test tenant isolation for every tenant-scoped change.

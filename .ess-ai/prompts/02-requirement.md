@@ -1,0 +1,2 @@
+# ESS Requirement Analysis
+Analyze the requirement against the existing project. Return intent, acceptance criteria, affected modules, data/API impact, security/tenant impact, dependencies, risks, assumptions and UNKNOWNs. Do not implement.

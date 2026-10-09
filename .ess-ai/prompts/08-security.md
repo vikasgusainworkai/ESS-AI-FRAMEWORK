@@ -1,0 +1,2 @@
+# ESS Security Review
+Review secrets, auth, authorization, tenant isolation, injection, dependencies, logging, AI data exposure and agent/MCP permissions. Return evidence, remediation and residual risk.

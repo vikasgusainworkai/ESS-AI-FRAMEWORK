@@ -1,0 +1,41 @@
+name: ESS Python CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scan (gitleaks)
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --verbose
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: ESS guardrail check (protected files, dependencies, secrets, architecture, Definition of Tested)
+        if: github.event_name == 'pull_request'
+        run: python tools/ess_guard.py check --base origin/${{ github.base_ref }} --no-tests
+      - run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]'
+      - name: Lint
+        run: ruff check .
+      - name: Format
+        run: ruff format --check .
+      - name: Typecheck
+        run: mypy src
+      - name: Tests
+        run: pytest -q
+      - name: Dependency audit
+        run: pip-audit --skip-editable
+      - name: Build
+        run: python -m build

@@ -1,0 +1,2 @@
+# ESS Discover
+Read `.ess-ai/rules/` and relevant context. Inspect the repository, tests, DB/API contracts and configuration. Do not modify code. Return understanding, affected files, risks and UNKNOWNs.

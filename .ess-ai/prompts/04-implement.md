@@ -1,0 +1,2 @@
+# ESS Feature Implementation
+Implement only the approved phase. Re-read context and rules, make the smallest safe change, reuse existing patterns, avoid new dependencies and unrelated cleanup, run verification and report exact results.

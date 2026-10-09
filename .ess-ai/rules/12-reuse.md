@@ -1,0 +1,2 @@
+# Reuse Rule
+Before designing a new RAG / pgvector, MCP, agent, integration, migration or testing approach, check `.ess-ai/context/reuse-catalog.md` and the ESS AI Knowledge Hub (`prompts/dev/17-find-reusable-existing-implementation.md`). Reuse or extend an existing ESS implementation where it fits; report the source and differences. When you build a new reusable AI capability, publish it (`.ess-ai/knowledge/README.md`).

@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "ESS starter allowlist"
+paths = ['''\.env\.example$''']
